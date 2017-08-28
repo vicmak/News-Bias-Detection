@@ -58,23 +58,32 @@ class NewsCorpusReader:
         self.negative_news_path = negative_news_path
         self.positive_number = 0
         self.negative_number = 0
+        self.vocab_filename = "/Users/macbook/Desktop/corpora/news/news_50k_vocab.txt"
+        self.vocab = []
 
+        with open(self.vocab_filename) as vocab_file:
+            for line in vocab_file:
+                line = line.strip()
+                self.vocab.append(line)
 
     def get_token_list(self, filename, root_path):
 
         title = filename.lower()
 
-        full_path = root_path + "/" + filename
-        with open(full_path) as news_file:
-            news_text = news_file.read().replace('\n', ' ')
-            title = title + news_text.lower()
+        #  Uncomment this for using the text of the articles
+        #full_path = root_path + "/" + filename
+        #with open(full_path) as news_file:
+        #    news_text = news_file.read().replace('\n', ' ')
+        #    title = title + news_text.lower()
 
         title = ExtractAlphanumeric(title)
         title_tokens = get_padded_sentences_tokens_list(title)
-        tokens_list = ["<start>"] + title_tokens + ["<stop>"]
+        clean_tokens = [token for token in title_tokens if token in self.vocab]
+        tokens_list = ["<start>"] + clean_tokens + ["<stop>"]
         return tokens_list
 
     def __iter__(self):  # Yields one instance as a list of words
+
 
         for root, dirs, files in os.walk(self.positive_news_path):
             path = root.split(os.sep)
@@ -159,9 +168,9 @@ for item in test_list:
     int_test.append(int_item)
 
 
-max_sent_length = 100
-embedding_vector_length = 200
-memory_size = 200 # The size of LSTM memory cell
+max_sent_length = 20
+embedding_vector_length = 300
+memory_size = 300 # The size of LSTM memory cell
 WORDS_NUM = vocab.size()
 
 X_train = int_train
@@ -174,13 +183,13 @@ X_test = sequence.pad_sequences(X_test, maxlen=max_sent_length)
 
 model = Sequential()
 model.add(Embedding(WORDS_NUM, embedding_vector_length, input_length=max_sent_length))
-model.add(Bidirectional(LSTM(memory_size)))
+model.add(LSTM(memory_size))
 model.add(Dense(1, activation='sigmoid'))
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 print "Fitting the model - Train start"
 
-model.fit(X_train, Y_train, epochs=5, batch_size=200)
+model.fit(X_train, Y_train, epochs=10, batch_size=100)
 
 predictions = model.predict(X_test)
 
