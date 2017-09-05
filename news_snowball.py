@@ -324,7 +324,7 @@ for i in indexes:
     model.add(Dense(1, activation='sigmoid'))
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     padded_train = sequence.pad_sequences(X_train, maxlen=max_text_length)
-    model.fit(X_train, Y_train, epochs=20, batch_size=train_batch_size)
+    model.fit(padded_train, Y_train, epochs=20, batch_size=train_batch_size)
     predictions = model.predict(X_test)
 
 
